@@ -1,0 +1,33 @@
+{
+  "articles": {
+    "1050": {
+      "id": "1050",
+      "sub_name": "dogpics",
+      "title": "asdasd",
+      "creator_id": "8975",
+      "link": "qweadasdasd.com",
+      "ts": 1709364410019,
+      "text": "asdasdsad"
+    }
+  },
+  "comments": {
+    "1900": {
+      "id": "1900",
+      "article_id": "3459",
+      "creator_id": "9833",
+      "ts": 1709352981740,
+      "text": "omg u dummy",
+      "parent": "7977",
+      "children": [],
+      "creator": "cat",
+      "date": "+056137-03-29T00:42:20.000Z"
+    }
+  },
+  "users": {
+    "6023": {
+      "id": "6023",
+      "username": "dog",
+      "password_hash": "$2b$12$qSSrYh/05KV56UK6jxVWU.jfo0Oy.4QqcoSa/MvUhlWCjdn93PNeS"
+    }
+  }
+}
