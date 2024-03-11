@@ -1,0 +1,115 @@
+body {
+  font-family: "Arial", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+.header {
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  padding: 10px 0;
+}
+.navbar {
+  background-color: #444;
+  overflow: hidden;
+  position: fixed;
+  width: 200px;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+.navbar a {
+  padding: 10px 15px;
+  text-decoration: none;
+  display: block; /* This makes the links stack vertically */
+  color: white;
+}
+.navbar a:hover {
+  background-color: #555;
+}
+
+.cards-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  padding: 0;
+  margin-left: 200px; /* Adjusted for the fixed navbar */
+}
+
+.card {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  margin: 16px;
+  overflow: hidden;
+  flex-basis: calc(33% - 32px); /* Three cards per row with margins */
+  display: flex;
+  flex-direction: column;
+}
+
+.card img {
+  width: 100%;
+  height: auto; /* Maintain aspect ratio */
+}
+
+.card-container {
+  padding: 15px;
+}
+
+.card-title {
+  font-size: 18px;
+  margin-top: 15px;
+}
+
+.card-description {
+  font-size: 14px;
+  color: grey;
+  margin-top: 5px;
+}
+
+/* Responsive layout for the card */
+@media (max-width: 768px) {
+  .cards-container {
+    margin: 0; /* Adjust margin for smaller screens */
+  }
+  .card {
+    flex-basis: 100%; /* Full width for small screens */
+    margin: 8px;
+  }
+  .navbar {
+    width: 100%;
+    height: auto;
+    display: flex; /* Use flexbox for horizontal alignment */
+    justify-content: space-around; /* This distributes the space around the links */
+  }
+  .navbar a {
+    float: none; /* Remove float, if previously set */
+    display: inline-block; /* Display links horizontally */
+    width: auto; /* Let the width be auto to accommodate the text */
+  }
+  .navbar a:last-child {
+    border-right: none;
+  }
+  .footer {
+    position: relative;
+  }
+  .header,
+  .navbar {
+    position: relative; /* Change position to relative */
+    width: 100%;
+    height: auto;
+    top: 0; /* Reset top position */
+  }
+  .card {
+    flex-basis: calc(50% - 32px); /* Two cards per row with margins */
+  }
+}
+
+.footer {
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  padding: 10px 0;
+}
