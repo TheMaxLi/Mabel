@@ -8,32 +8,11 @@
 <body>
    <%- include('header'); %>
       <div class="cards-container">
-        <!-- Card content -->
-        <div class="card">
-          <img src="https://cdn.dribbble.com/userupload/10702655/file/original-223eb99cec1de196455da8c9c060ee46.jpg?resize=400x0"
-           alt="Project Image"> <!-- Replace with your image source -->
-          <div class="card-container">
-            <h4 class="card-title">Project Title</h4>
-            <p class="card-description">A brief description of the project, what it entailed, and the skills it demonstrates.</p>
-          </div>
-        </div>
-        <div class="card">
-            <img src="https://cdn.dribbble.com/userupload/10702655/file/original-223eb99cec1de196455da8c9c060ee46.jpg?resize=400x0"
-             alt="Project Image"> <!-- Replace with your image source -->
-            <div class="card-container">
-              <h4 class="card-title">Project Title</h4>
-              <p class="card-description">A brief description of the project, what it entailed, and the skills it demonstrates.</p>
-            </div>
-        </div>
-        <div class="card">
-            <img src="goat.png/img" alt="Project Image"> <!-- Replace with your image source -->
-            <div class="card-container">
-              <h4 class="card-title">Project Title</h4>
-              <p class="card-description">A brief description of the project, what it entailed, and the skills it demonstrates.</p>
-            </div>
-        </div>
-        <% if (info.session.user) { %> 
-          <%- include("addArticle", {category : info.params.category}) %> 
+        <% for (let card of info.cards) { %>
+          <%- include('card', {card : card}) %>
+        <% } %>
+        <% if (info.req.session.user) { %> 
+          <%- include("addArticle", {category : info.req.params.category}) %> 
          <% } %>
       </div>
 

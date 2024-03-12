@@ -40,7 +40,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 app.get("/", (req, res) => {
-  res.render("home");
+  res.render("home"); //Hey max <3 -Peter Hello Peter
 });
 
 app.get("/style.css", (req, res) => {
@@ -48,20 +48,50 @@ app.get("/style.css", (req, res) => {
 });
 
 app.get("/view/:category", (req, res) => {
+
+  const cards = db.articles.get_byFilter((article) => {
+    if (article.sub === req.params.category) {
+      return article;
+    }
+  });
+
+  const info = { req, cards };
+
   console.log("Going to", req.params.category);
-  res.render("index", { info: req });
+  res.render("index", { info: info });
 });
 
-app.get("/view/:category/img", (req, res) => {
-  console.log("sending file");
-  const filePath = path.join(__dirname, "photos", req.params.category);
+app.get("/view/:imageName/img", (req, res) => {
+  const filePath = path.join(__dirname, "photos", req.params.imageName);
 
   res.sendFile(filePath);
 });
 
 app.post("/view/:category", upload.single("photo"), async (req, res) => {
   const category = req.params.category;
-  const uploadDir = path.join(__dirname, "photos");
+  const form = req.body;
+
+  await db.articles.create({
+    sub: category,
+    title: req.body.title,
+    text: form.desc,
+    img: req.file.filename,
+  });
+
+  res.redirect(`/view/${req.params.category}`);
+});
+
+app.post("/view/:category/video", async (req, res) => {
+  //not used
+  const category = req.params.category;
+  const form = req.body;
+
+  await db.articles.create({
+    sub: category,
+    title: form.title,
+    link: form.link,
+    text: form.desc,
+  });
 
   res.redirect(`/view/${req.params.category}`);
 });

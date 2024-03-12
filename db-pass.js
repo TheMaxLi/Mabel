@@ -8,12 +8,7 @@ const fs = require("fs");
 
 const DB_FILE_NAME = "./database_data.json";
 const DB = {};
-const whitelist_of_tables = [
-  "subs",
-  "articles",
-  "comments",
-  "users",
-];
+const whitelist_of_tables = ["subs", "articles", "comments", "users"];
 
 const __PARAMETER_NOT_SET = Symbol("parameter not set");
 
@@ -138,63 +133,11 @@ const subs = {
 // Functions for articles
 
 const articles = {
-  get_byId: function (
-    id,
-    {
-      withComments = false,
-      withCreator = false,
-      withVotes = false,
-      withCurrentVote = undefined,
-      withNestedComments = false,
-      order_by,
-    } = {}
-  ) {
+  get_byId: function (id) {
     let ans = DB.articles[id];
     if (ans === undefined) {
       return undefined;
     }
-    ans = { ...ans };
-
-    if (withComments) {
-      ans.comments = comments.get_byFilter(
-        (comment) =>
-          comment.article_id === id && !(withNestedComments && comment.parent),
-        {
-          withCreator: true,
-          withVotes,
-          withCurrentVote,
-          withNestedComments,
-          order_by,
-        }
-      );
-    }
-    if (withCreator) {
-      ans.creator = users.get_byId(ans.creator_id);
-    }
-    if (withVotes) {
-      let votes = Object.values(DB.articles_votes).filter(
-        (v) => v.article_id === id
-      );
-      let upvotes = 0;
-      let downvotes = 0;
-      for (let v of votes) {
-        if (v.vote_value > 0) {
-          upvotes++;
-        }
-        if (v.vote_value < 0) {
-          downvotes++;
-        }
-      }
-      ans.upvotes = upvotes;
-      ans.downvotes = downvotes;
-    }
-    if (withCurrentVote !== undefined) {
-      ans.current_vote = articles.get_vote({
-        article: ans,
-        voter: withCurrentVote,
-      });
-    }
-
     return ans;
   },
   get_byFilter: function (filter_cb, options = {}) {
@@ -209,24 +152,20 @@ const articles = {
 
     return ans;
   },
-  create: function ({ sub, title, creator, link, text, ts }) {
-    if (!sub || !title || !creator || !link) {
-      console.error({ sub, title, creator, link, text });
+  create: function ({ sub, title, link, text, img }) {
+    if (!sub || !title || !text || (!link && !img)) {
+      console.error({ sub, title, link, text, img });
       throw Error("missing parameters for new article");
     }
-    ts = ts || Date.now();
-
-    let { user_id: creator_id, user_object } =
-      users.__validate_reference(creator);
-    let { sub_name, sub_object } = subs.__validate_reference(sub);
+    let ts = new Date().toDateString();
 
     let pk = _new_pk(DB.articles);
     DB.articles[pk] = {
       id: pk,
-      sub_name,
+      sub,
       title,
-      creator_id,
       link,
+      img,
       ts,
       text,
     };
@@ -351,164 +290,162 @@ const users = {
   },
 };
 
-
 const comments = {
-    get_byId: function (id, options = {}) {
-      let {
-        withCreator = false,
-        withVotes = false,
-        withCurrentVote = undefined,
-        withNestedComments = false,
-      } = options;
-      let ans = DB.comments[id];
-      if (ans === undefined) {
-        return undefined;
-      }
-      ans = { ...ans };
-  
-      if (withCreator) {
-        ans.creator = users.get_byId(ans.creator_id);
-      }
-      if (withVotes) {
-        let votes = Object.values(DB.comments_votes).filter(
-          (v) => v.comment_id === id
-        );
-        let upvotes = 0;
-        let downvotes = 0;
-        for (let v of votes) {
-          if (v.vote_value > 0) {
-            upvotes++;
-          }
-          if (v.vote_value < 0) {
-            downvotes++;
-          }
+  get_byId: function (id, options = {}) {
+    let {
+      withCreator = false,
+      withVotes = false,
+      withCurrentVote = undefined,
+      withNestedComments = false,
+    } = options;
+    let ans = DB.comments[id];
+    if (ans === undefined) {
+      return undefined;
+    }
+    ans = { ...ans };
+
+    if (withCreator) {
+      ans.creator = users.get_byId(ans.creator_id);
+    }
+    if (withVotes) {
+      let votes = Object.values(DB.comments_votes).filter(
+        (v) => v.comment_id === id
+      );
+      let upvotes = 0;
+      let downvotes = 0;
+      for (let v of votes) {
+        if (v.vote_value > 0) {
+          upvotes++;
         }
-        ans.upvotes = upvotes;
-        ans.downvotes = downvotes;
+        if (v.vote_value < 0) {
+          downvotes++;
+        }
       }
-      if (withCurrentVote !== undefined) {
-        ans.current_vote = comments.get_vote({
-          comment: ans,
-          voter: withCurrentVote,
-        });
-      }
-      if (withNestedComments) {
-        ans.children = ans.children.map((child_id) =>
-          comments.get_byId(child_id, options)
-        );
-      } else {
-        ans.children = [];
-      }
-  
-      return ans;
-    },
-    get_byFilter: function (filter_cb, options = {}) {
-      let ans = Object.values(DB.comments)
-        .filter(filter_cb)
-        .map((comment) => comments.get_byId(comment.id, options));
-  
-      let sorting_cb = options.order_by
-        ? options.order_by
-        : (a, b) => a.ts - b.ts;
-      ans.sort(sorting_cb);
-  
-      return ans;
-    },
-    create: function ({
-      creator,
+      ans.upvotes = upvotes;
+      ans.downvotes = downvotes;
+    }
+    if (withCurrentVote !== undefined) {
+      ans.current_vote = comments.get_vote({
+        comment: ans,
+        voter: withCurrentVote,
+      });
+    }
+    if (withNestedComments) {
+      ans.children = ans.children.map((child_id) =>
+        comments.get_byId(child_id, options)
+      );
+    } else {
+      ans.children = [];
+    }
+
+    return ans;
+  },
+  get_byFilter: function (filter_cb, options = {}) {
+    let ans = Object.values(DB.comments)
+      .filter(filter_cb)
+      .map((comment) => comments.get_byId(comment.id, options));
+
+    let sorting_cb = options.order_by
+      ? options.order_by
+      : (a, b) => a.ts - b.ts;
+    ans.sort(sorting_cb);
+
+    return ans;
+  },
+  create: function ({
+    creator,
+    text,
+    article,
+    ts = undefined,
+    parent = undefined,
+  }) {
+    if (!creator || !text || !article) {
+      throw Error("missing parameters for new comment");
+    }
+    ts = ts || Date.now();
+
+    let { user_id: creator_id, user_object } =
+      users.__validate_reference(creator);
+    let { article_id, article_object } = articles.__validate_reference(article);
+
+    if (parent) {
+      let { comment_id, comment_object } =
+        comments.__validate_reference(parent);
+      parent = comment_id;
+    }
+
+    let pk = _new_pk(DB.comments);
+    DB.comments[pk] = {
+      id: pk,
+      article_id,
+      creator_id,
+      ts,
       text,
-      article,
-      ts = undefined,
-      parent = undefined,
-    }) {
-      if (!creator || !text || !article) {
-        throw Error("missing parameters for new comment");
+      parent,
+      children: [],
+    };
+    if (parent) {
+      DB.comments[parent].children.push(pk);
+    }
+
+    _save_to_json();
+    return DB.comments[pk];
+  },
+  update: function ({ id, text }) {
+    if (!id || !text) {
+      console.error({ id, text });
+      throw Error("missing parameters to update comment");
+    }
+
+    let comment = DB.comments[id];
+    if (!comment) {
+      throw Error("invalid comment id");
+    }
+
+    comment.text = text;
+
+    _save_to_json();
+    return DB.comments[id];
+  },
+  delete: function (id) {
+    let comment = DB.comments[id];
+    if (!comment) {
+      throw Error("invalid comment id");
+    }
+    if (comment.children?.length > 0) {
+      comment.creator_id = undefined;
+      comment.text = undefined;
+    } else {
+      if (comment.parent) {
+        DB.comments[comment.parent].children = DB.comments[
+          comment.parent
+        ].children.filter((cid) => cid != id);
       }
-      ts = ts || Date.now();
-  
-      let { user_id: creator_id, user_object } =
-        users.__validate_reference(creator);
-      let { article_id, article_object } = articles.__validate_reference(article);
-  
-      if (parent) {
-        let { comment_id, comment_object } =
-          comments.__validate_reference(parent);
-        parent = comment_id;
-      }
-  
-      let pk = _new_pk(DB.comments);
-      DB.comments[pk] = {
-        id: pk,
-        article_id,
-        creator_id,
-        ts,
-        text,
-        parent,
-        children: [],
-      };
-      if (parent) {
-        DB.comments[parent].children.push(pk);
-      }
-  
-      _save_to_json();
-      return DB.comments[pk];
-    },
-    update: function ({ id, text }) {
-      if (!id || !text) {
-        console.error({ id, text });
-        throw Error("missing parameters to update comment");
-      }
-  
-      let comment = DB.comments[id];
-      if (!comment) {
-        throw Error("invalid comment id");
-      }
-  
-      comment.text = text;
-  
-      _save_to_json();
-      return DB.comments[id];
-    },
-    delete: function (id) {
-      let comment = DB.comments[id];
-      if (!comment) {
-        throw Error("invalid comment id");
-      }
-      if (comment.children?.length > 0) {
-        comment.creator_id = undefined;
-        comment.text = undefined;
-      } else {
-        if (comment.parent) {
-          DB.comments[comment.parent].children = DB.comments[
-            comment.parent
-          ].children.filter((cid) => cid != id);
-        }
-        delete DB.comments[id];
-      }
-      _save_to_json();
-    },
-    __validate_reference: function (comment_id_or_object) {
-      let comment_id;
-      if (
-        comment_id_or_object &&
-        typeof comment_id_or_object === "object" &&
-        comment_id_or_object.id
-      ) {
-        // if we got a comment object, convert to commentid so that next line works
-        comment_id = comment_id_or_object.id;
-      } else {
-        comment_id = comment_id_or_object;
-      }
-  
-      let comment_object = comments.get_byId(comment_id);
-      if (comment_object === undefined) {
-        throw Error("invalid comment id: " + comment_id);
-      }
-  
-      return { comment_id, comment_object };
-    },
-  };
-  
+      delete DB.comments[id];
+    }
+    _save_to_json();
+  },
+  __validate_reference: function (comment_id_or_object) {
+    let comment_id;
+    if (
+      comment_id_or_object &&
+      typeof comment_id_or_object === "object" &&
+      comment_id_or_object.id
+    ) {
+      // if we got a comment object, convert to commentid so that next line works
+      comment_id = comment_id_or_object.id;
+    } else {
+      comment_id = comment_id_or_object;
+    }
+
+    let comment_object = comments.get_byId(comment_id);
+    if (comment_object === undefined) {
+      throw Error("invalid comment id: " + comment_id);
+    }
+
+    return { comment_id, comment_object };
+  },
+};
 
 // Functions for debugging
 
